@@ -1,108 +1,74 @@
-import { Metadata } from 'next';
-import prisma from '@/lib/prisma';
-import { notFound } from 'next/navigation';
-import { Post, User } from '@prisma/client';
-import Link from 'next/link';
-import DeleteButton from '@/components/DeleteButton';
+import { Metadata } from 'next'
+import prisma from '@/lib/prisma'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import DeleteButton from '@/components/DeleteButton'
 
 interface PostPageProps {
   params: {
-    id: string;
-  };
+    id: string
+  }
 }
 
-export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
-  const { id } = params;
+export async function generateMetadata({
+  params,
+}: PostPageProps): Promise<Metadata> {
   const post = await prisma.post.findUnique({
-    where: { id },
-    select: { 
-      title: true, 
-      content: true,
-      author: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
+    where: { id: params.id },
+    include: { author: true },
+  })
 
   if (!post) {
     return {
-      title: "Post Not Found",
-      description: "The requested blog post could not be found.",
-      openGraph: {
-        title: "Post Not Found",
-        description: "The requested blog post could not be found.",
-      },
-      twitter: {
-        card: "summary",
-        title: "Post Not Found",
-        description: "The requested blog post could not be found.",
-      },
-    };
+      title: 'Post Not Found',
+      description: 'The requested post could not be found.',
+    }
   }
-
-  const authorName = post.author?.name || post.author?.email || 'Unknown Author';
-  const description = post.content 
-    ? post.content.substring(0, 150) + '...' 
-    : `Read more about ${post.title} by ${authorName}.`;
 
   return {
     title: post.title,
-    description,
+    description: post.content.substring(0, 160),
     openGraph: {
       title: post.title,
-      description,
-      type: "article",
-      authors: [authorName],
+      description: post.content.substring(0, 160),
+      type: 'article',
+      authors: [post.author.name || ''],
     },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title,
-      description,
-      creator: authorName,
-    },
-  };
+  }
 }
 
-export default async function SinglePostPage({ params }: PostPageProps) {
-  const { id } = params;
+export default async function PostPage({ params }: PostPageProps) {
   const post = await prisma.post.findUnique({
-    where: { id },
-    include: {
-      author: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
+    where: { id: params.id },
+    include: { author: true },
+  })
 
   if (!post) {
-    notFound();
+    notFound()
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <Link href="/posts" className="text-blue-600 hover:underline">
-          &larr; Back to Posts
-        </Link>
-        <DeleteButton id={post.id} itemName="post" />
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-8">
+          <Link href="/posts" className="text-blue-600 hover:underline">
+            ← Back to Posts
+          </Link>
+        </div>
+        <article className="bg-white rounded-lg shadow-lg p-6">
+          <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+          <div className="text-gray-600 mb-4">
+            By {post.author.name} on{' '}
+            {new Date(post.createdAt).toLocaleDateString()}
+          </div>
+          <div className="prose max-w-none">
+            <p>{post.content}</p>
+          </div>
+          <div className="mt-8 flex justify-end">
+            <DeleteButton postId={post.id} />
+          </div>
+        </article>
       </div>
-
-      <article className="bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
-        <div className="text-sm text-gray-500 mb-6">
-          By {post.author?.name || post.author?.email || 'Unknown Author'} on{' '}
-          {new Date(post.createdAt).toLocaleDateString()}
-        </div>
-        <div className="prose max-w-none">
-          {post.content}
-        </div>
-      </article>
     </div>
-  );
-} 
+  )
+}
