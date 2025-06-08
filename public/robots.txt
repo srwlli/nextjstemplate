@@ -1,0 +1,27 @@
+# public/robots.txt
+User-agent: *
+Allow: /
+
+# Disallow: /admin # Example: Uncomment and modify to disallow access to an /admin route
+# Disallow: /api # Example: Uncomment to disallow access to API routes
+# Disallow: /_next # Example: Uncomment to disallow access to Next.js internal routes
+
+# Crawl-delay: 10 # Example: Uncomment to set a crawl delay of 10 seconds
+
+# Sitemap: https://yourdomain.com/sitemap.xml # Example: Uncomment and add your sitemap URL here later
+
+# Additional rules for specific bots
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: / 
